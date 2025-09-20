@@ -17,9 +17,140 @@ import { useState } from "react";
 export default function Index() {
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [selectedInstallation, setSelectedInstallation] = useState<any>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedInstallation, setEditedInstallation] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [typeFilter, setTypeFilter] = useState<string>('all');
+
+  // Функции для редактирования
+  const startEditing = (installation: any) => {
+    setEditedInstallation({ ...installation });
+    setIsEditing(true);
+  };
+
+  const cancelEditing = () => {
+    setEditedInstallation(null);
+    setIsEditing(false);
+  };
+
+  const saveChanges = () => {
+    if (!editedInstallation) return;
+    
+    // Обновляем данные в массиве
+    const updatedData = allData.map(item => 
+      item.id === editedInstallation.id ? editedInstallation : item
+    );
+    
+    setSelectedInstallation(editedInstallation);
+    setIsEditing(false);
+    setEditedInstallation(null);
+    
+    // Здесь можно добавить сохранение в базу данных
+    console.log('Сохранены изменения:', editedInstallation);
+  };
+
+  const updateField = (path: string, value: any) => {
+    if (!editedInstallation) return;
+    
+    const pathArray = path.split('.');
+    const updatedInstallation = { ...editedInstallation };
+    
+    let current = updatedInstallation;
+    for (let i = 0; i < pathArray.length - 1; i++) {
+      if (!current[pathArray[i]]) current[pathArray[i]] = {};
+      current = current[pathArray[i]];
+    }
+    current[pathArray[pathArray.length - 1]] = value;
+    
+    setEditedInstallation(updatedInstallation);
+  };
+
+  // Компонент для редактируемого поля
+  const EditableField = ({ label, path, type = "text", options = null, isTextarea = false }: {
+    label: string;
+    path: string;
+    type?: string;
+    options?: Array<{value: string, label: string}> | null;
+    isTextarea?: boolean;
+  }) => {
+    const currentInstallation = isEditing ? editedInstallation : selectedInstallation;
+    if (!currentInstallation) return null;
+
+    const getValue = (obj: any, path: string) => {
+      return path.split('.').reduce((o, p) => o?.[p], obj) || '';
+    };
+
+    const value = getValue(currentInstallation, path);
+
+    if (!isEditing) {
+      return (
+        <div>
+          <Label className="text-sm font-medium">{label}</Label>
+          <Input value={value || '-'} readOnly />
+        </div>
+      );
+    }
+
+    if (options) {
+      return (
+        <div>
+          <Label className="text-sm font-medium">{label}</Label>
+          <Select value={value} onValueChange={(val) => updateField(path, val)}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {options.map(opt => (
+                <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      );
+    }
+
+    if (type === "boolean") {
+      return (
+        <div>
+          <Label className="text-sm font-medium">{label}</Label>
+          <Select value={value ? "true" : "false"} onValueChange={(val) => updateField(path, val === "true")}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="true">Да</SelectItem>
+              <SelectItem value="false">Нет</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      );
+    }
+
+    if (isTextarea) {
+      return (
+        <div>
+          <Label className="text-sm font-medium">{label}</Label>
+          <Textarea 
+            value={value} 
+            onChange={(e) => updateField(path, e.target.value)}
+            rows={2}
+          />
+        </div>
+      );
+    }
+
+    return (
+      <div>
+        <Label className="text-sm font-medium">{label}</Label>
+        <Input 
+          type={type}
+          value={value} 
+          onChange={(e) => updateField(path, type === "number" ? Number(e.target.value) : e.target.value)}
+        />
+      </div>
+    );
+  };
 
   const allData = [
     // Установленные котлы
@@ -737,10 +868,44 @@ export default function Index() {
                                   </DialogTrigger>
                                   <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
                                     <DialogHeader>
-                                      <DialogTitle>Детали объекта {item.id}</DialogTitle>
-                                      <DialogDescription>
-                                        Полная информация о клиенте, котле и документах
-                                      </DialogDescription>
+                                      <div className="flex items-center justify-between">
+                                        <div>
+                                          <DialogTitle>Детали объекта {item.id}</DialogTitle>
+                                          <DialogDescription>
+                                            Полная информация о клиенте, котле и документах
+                                          </DialogDescription>
+                                        </div>
+                                        <div className="flex space-x-2">
+                                          {!isEditing ? (
+                                            <Button
+                                              variant="outline"
+                                              size="sm"
+                                              onClick={() => startEditing(selectedInstallation)}
+                                            >
+                                              <Icon name="Edit" size={14} className="mr-1" />
+                                              Редактировать
+                                            </Button>
+                                          ) : (
+                                            <>
+                                              <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={cancelEditing}
+                                              >
+                                                <Icon name="X" size={14} className="mr-1" />
+                                                Отмена
+                                              </Button>
+                                              <Button
+                                                size="sm"
+                                                onClick={saveChanges}
+                                              >
+                                                <Icon name="Check" size={14} className="mr-1" />
+                                                Сохранить
+                                              </Button>
+                                            </>
+                                          )}
+                                        </div>
+                                      </div>
                                     </DialogHeader>
                                     
                                     {selectedInstallation && (
@@ -764,30 +929,12 @@ export default function Index() {
                                             </div>
                                             
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                              <div>
-                                                <Label className="text-sm font-medium">Основной телефон</Label>
-                                                <Input value={selectedInstallation.client.phone} readOnly />
-                                              </div>
-                                              <div>
-                                                <Label className="text-sm font-medium">Дополнительный телефон</Label>
-                                                <Input value={selectedInstallation.client.additionalPhone || '-'} readOnly />
-                                              </div>
-                                              <div>
-                                                <Label className="text-sm font-medium">Email</Label>
-                                                <Input value={selectedInstallation.client.email} readOnly />
-                                              </div>
-                                              <div>
-                                                <Label className="text-sm font-medium">Паспорт</Label>
-                                                <Input value={selectedInstallation.client.passport} readOnly />
-                                              </div>
-                                              <div>
-                                                <Label className="text-sm font-medium">ИНН</Label>
-                                                <Input value={selectedInstallation.client.inn} readOnly />
-                                              </div>
-                                              <div>
-                                                <Label className="text-sm font-medium">Согласие получено</Label>
-                                                <Input value={selectedInstallation.client.agreement ? 'Да' : 'Нет'} readOnly />
-                                              </div>
+                                              <EditableField label="Основной телефон" path="client.phone" />
+                                              <EditableField label="Дополнительный телефон" path="client.additionalPhone" />
+                                              <EditableField label="Email" path="client.email" type="email" />
+                                              <EditableField label="Паспорт" path="client.passport" />
+                                              <EditableField label="ИНН" path="client.inn" />
+                                              <EditableField label="Согласие получено" path="client.agreement" type="boolean" />
                                             </div>
                                           </CardContent>
                                         </Card>
@@ -799,30 +946,12 @@ export default function Index() {
                                           </CardHeader>
                                           <CardContent>
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                              <div>
-                                                <Label className="text-sm font-medium">Регион</Label>
-                                                <Input value={selectedInstallation.client.region || '-'} readOnly />
-                                              </div>
-                                              <div>
-                                                <Label className="text-sm font-medium">Населенный пункт</Label>
-                                                <Input value={selectedInstallation.client.city || '-'} readOnly />
-                                              </div>
-                                              <div>
-                                                <Label className="text-sm font-medium">Район</Label>
-                                                <Input value={selectedInstallation.client.district || '-'} readOnly />
-                                              </div>
-                                              <div>
-                                                <Label className="text-sm font-medium">Улица</Label>
-                                                <Input value={selectedInstallation.client.street || '-'} readOnly />
-                                              </div>
-                                              <div>
-                                                <Label className="text-sm font-medium">Дом</Label>
-                                                <Input value={selectedInstallation.client.house || '-'} readOnly />
-                                              </div>
-                                              <div>
-                                                <Label className="text-sm font-medium">Кадастровый номер</Label>
-                                                <Input value={selectedInstallation.client.cadastralNumber || '-'} readOnly />
-                                              </div>
+                                              <EditableField label="Регион" path="client.region" />
+                                              <EditableField label="Населенный пункт" path="client.city" />
+                                              <EditableField label="Район" path="client.district" />
+                                              <EditableField label="Улица" path="client.street" />
+                                              <EditableField label="Дом" path="client.house" />
+                                              <EditableField label="Кадастровый номер" path="client.cadastralNumber" />
                                             </div>
                                           </CardContent>
                                         </Card>
@@ -834,54 +963,35 @@ export default function Index() {
                                           </CardHeader>
                                           <CardContent>
                                             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                                              <div>
-                                                <Label className="text-sm font-medium">Год постройки до 2018</Label>
-                                                <Input value={selectedInstallation.client.houseBuiltBefore2018 ? 'Да' : 'Нет'} readOnly />
-                                              </div>
-                                              <div>
-                                                <Label className="text-sm font-medium">Этажность</Label>
-                                                <Input value={selectedInstallation.client.floors || '-'} readOnly />
-                                              </div>
-                                              <div>
-                                                <Label className="text-sm font-medium">Материал стен</Label>
-                                                <Input value={selectedInstallation.client.houseWallMaterial || '-'} readOnly />
-                                              </div>
-                                              <div>
-                                                <Label className="text-sm font-medium">Фактическая площадь (м²)</Label>
-                                                <Input value={selectedInstallation.client.actualHouseArea || '-'} readOnly />
-                                              </div>
-                                              <div>
-                                                <Label className="text-sm font-medium">Обогреваемая площадь (м²)</Label>
-                                                <Input value={selectedInstallation.client.heatedArea || '-'} readOnly />
-                                              </div>
-                                              <div>
-                                                <Label className="text-sm font-medium">Высота потолков (м)</Label>
-                                                <Input value={selectedInstallation.client.houseCeilingHeight || '-'} readOnly />
-                                              </div>
-                                              <div>
-                                                <Label className="text-sm font-medium">Количество собственников</Label>
-                                                <Input value={selectedInstallation.client.ownersCount || '-'} readOnly />
-                                              </div>
-                                              <div>
-                                                <Label className="text-sm font-medium">Дата ввода в эксплуатацию</Label>
-                                                <Input value={selectedInstallation.client.houseCommissioningDate || '-'} readOnly />
-                                              </div>
-                                              <div>
-                                                <Label className="text-sm font-medium">Остекление</Label>
-                                                <Input value={selectedInstallation.client.glazing || '-'} readOnly />
-                                              </div>
-                                              <div>
-                                                <Label className="text-sm font-medium">Площадь остекления (м²)</Label>
-                                                <Input value={selectedInstallation.client.glazingArea || '-'} readOnly />
-                                              </div>
-                                              <div>
-                                                <Label className="text-sm font-medium">Витражное остекление</Label>
-                                                <Input value={selectedInstallation.client.panoramicGlazing ? 'Да' : 'Нет'} readOnly />
-                                              </div>
-                                              <div>
-                                                <Label className="text-sm font-medium">Наличие утеплителя</Label>
-                                                <Input value={selectedInstallation.client.insulation ? 'Да' : 'Нет'} readOnly />
-                                              </div>
+                                              <EditableField label="Год постройки до 2018" path="client.houseBuiltBefore2018" type="boolean" />
+                                              <EditableField label="Этажность" path="client.floors" type="number" />
+                                              <EditableField 
+                                                label="Материал стен" 
+                                                path="client.houseWallMaterial"
+                                                options={[
+                                                  {value: "brick", label: "Кирпич"},
+                                                  {value: "concrete", label: "Бетон"},
+                                                  {value: "wood", label: "Дерево"},
+                                                  {value: "panel", label: "Панель"}
+                                                ]}
+                                              />
+                                              <EditableField label="Фактическая площадь (м²)" path="client.actualHouseArea" type="number" />
+                                              <EditableField label="Обогреваемая площадь (м²)" path="client.heatedArea" type="number" />
+                                              <EditableField label="Высота потолков (м)" path="client.houseCeilingHeight" type="number" />
+                                              <EditableField label="Количество собственников" path="client.ownersCount" type="number" />
+                                              <EditableField label="Дата ввода в эксплуатацию" path="client.houseCommissioningDate" type="date" />
+                                              <EditableField 
+                                                label="Остекление" 
+                                                path="client.glazing"
+                                                options={[
+                                                  {value: "single", label: "Одинарное"},
+                                                  {value: "double", label: "Двойное"},
+                                                  {value: "triple", label: "Тройное"}
+                                                ]}
+                                              />
+                                              <EditableField label="Площадь остекления (м²)" path="client.glazingArea" type="number" />
+                                              <EditableField label="Витражное остекление" path="client.panoramicGlazing" type="boolean" />
+                                              <EditableField label="Наличие утеплителя" path="client.insulation" type="boolean" />
                                             </div>
                                           </CardContent>
                                         </Card>
@@ -1061,20 +1171,9 @@ export default function Index() {
                                             </div>
                                             
                                             <div className="mt-4 space-y-3">
-                                              <div>
-                                                <Label className="text-sm font-medium">Комментарий к заявке</Label>
-                                                <Textarea value={selectedInstallation.client.applicationComment || '-'} readOnly rows={2} />
-                                              </div>
-                                              <div>
-                                                <Label className="text-sm font-medium">Комментарий обходчиков</Label>
-                                                <Textarea value={selectedInstallation.client.surveyorComment || '-'} readOnly rows={2} />
-                                              </div>
-                                              {selectedInstallation.client.yandexDiskLink && (
-                                                <div>
-                                                  <Label className="text-sm font-medium">Ссылка на Яндекс диск</Label>
-                                                  <Input value={selectedInstallation.client.yandexDiskLink} readOnly />
-                                                </div>
-                                              )}
+                                              <EditableField label="Комментарий к заявке" path="client.applicationComment" isTextarea={true} />
+                                              <EditableField label="Комментарий обходчиков" path="client.surveyorComment" isTextarea={true} />
+                                              <EditableField label="Ссылка на Яндекс диск" path="client.yandexDiskLink" />
                                             </div>
                                           </CardContent>
                                         </Card>
@@ -1086,56 +1185,93 @@ export default function Index() {
                                           </CardHeader>
                                           <CardContent className="space-y-4">
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                              <div>
-                                                <Label className="text-sm font-medium">Тип котла</Label>
-                                                <Input value={selectedInstallation.boilerType} readOnly />
-                                              </div>
-                                              <div>
-                                                <Label className="text-sm font-medium">Дата заказа</Label>
-                                                <Input value={selectedInstallation.orderDate} readOnly />
-                                              </div>
-                                              <div>
-                                                <Label className="text-sm font-medium">Планируемая дата</Label>
-                                                <Input value={selectedInstallation.plannedDate} readOnly />
-                                              </div>
-                                              <div>
-                                                <Label className="text-sm font-medium">Статус заявки</Label>
-                                                <Badge className={`${getStatusColor(selectedInstallation.status)} text-white`}>
-                                                  {getStatusText(selectedInstallation.status)}
-                                                </Badge>
-                                              </div>
-                                              <div>
-                                                <Label className="text-sm font-medium">Завершение работы КЦ</Label>
-                                                <Input value={selectedInstallation.client.workCompletionStatus || '-'} readOnly />
-                                              </div>
-                                              <div>
-                                                <Label className="text-sm font-medium">Готовность к переводу</Label>
-                                                <Input value={selectedInstallation.client.ownersReadiness || '-'} readOnly />
-                                              </div>
-                                              <div>
-                                                <Label className="text-sm font-medium">Год перевода на эко-отопление</Label>
-                                                <Input value={selectedInstallation.client.ecoHeatingYear || '-'} readOnly />
-                                              </div>
-                                              <div>
-                                                <Label className="text-sm font-medium">Вид перевода</Label>
-                                                <Input value={selectedInstallation.client.conversionType || '-'} readOnly />
-                                              </div>
-                                              <div>
-                                                <Label className="text-sm font-medium">Вид АИТ</Label>
-                                                <Input value={selectedInstallation.client.aitType || '-'} readOnly />
-                                              </div>
-                                              <div>
-                                                <Label className="text-sm font-medium">Вид топлива</Label>
-                                                <Input value={selectedInstallation.client.fuelType || '-'} readOnly />
-                                              </div>
-                                              <div>
-                                                <Label className="text-sm font-medium">Система отопления</Label>
-                                                <Input value={selectedInstallation.client.heatingSystem || '-'} readOnly />
-                                              </div>
-                                              <div>
-                                                <Label className="text-sm font-medium">Тип системы отопления</Label>
-                                                <Input value={selectedInstallation.client.heatingSystemType || '-'} readOnly />
-                                              </div>
+                                              <EditableField label="Тип котла" path="boilerType" />
+                                              <EditableField label="Дата заказа" path="orderDate" type="date" />
+                                              <EditableField label="Планируемая дата" path="plannedDate" type="date" />
+                                              
+                                              <EditableField 
+                                                label="Статус заявки" 
+                                                path="status" 
+                                                options={[
+                                                  {value: "new", label: "Новая"},
+                                                  {value: "pending", label: "В ожидании"},
+                                                  {value: "approved", label: "Одобрена"},
+                                                  {value: "in_progress", label: "В работе"},
+                                                  {value: "completed", label: "Завершена"},
+                                                  {value: "cancelled", label: "Отменена"}
+                                                ]}
+                                              />
+                                              
+                                              <EditableField 
+                                                label="Завершение работы КЦ" 
+                                                path="client.workCompletionStatus"
+                                                options={[
+                                                  {value: "pending", label: "В ожидании"},
+                                                  {value: "in_progress", label: "В работе"},
+                                                  {value: "completed", label: "Завершена"}
+                                                ]}
+                                              />
+                                              
+                                              <EditableField 
+                                                label="Готовность к переводу" 
+                                                path="client.ownersReadiness"
+                                                options={[
+                                                  {value: "not_ready", label: "Не готов"},
+                                                  {value: "ready", label: "Готов"},
+                                                  {value: "in_process", label: "В процессе"}
+                                                ]}
+                                              />
+                                              
+                                              <EditableField label="Год перевода на эко-отопление" path="client.ecoHeatingYear" type="number" />
+                                              
+                                              <EditableField 
+                                                label="Вид перевода" 
+                                                path="client.conversionType"
+                                                options={[
+                                                  {value: "gas", label: "Газ"},
+                                                  {value: "electric", label: "Электричество"},
+                                                  {value: "solid_fuel", label: "Твердое топливо"}
+                                                ]}
+                                              />
+                                              
+                                              <EditableField 
+                                                label="Вид АИТ" 
+                                                path="client.aitType"
+                                                options={[
+                                                  {value: "individual", label: "Индивидуальный"},
+                                                  {value: "collective", label: "Коллективный"}
+                                                ]}
+                                              />
+                                              
+                                              <EditableField 
+                                                label="Вид топлива" 
+                                                path="client.fuelType"
+                                                options={[
+                                                  {value: "natural_gas", label: "Природный газ"},
+                                                  {value: "lpg", label: "Сжиженный газ"},
+                                                  {value: "electricity", label: "Электричество"},
+                                                  {value: "solid_fuel", label: "Твердое топливо"}
+                                                ]}
+                                              />
+                                              
+                                              <EditableField 
+                                                label="Система отопления" 
+                                                path="client.heatingSystem"
+                                                options={[
+                                                  {value: "radiator", label: "Радиаторная"},
+                                                  {value: "floor", label: "Теплый пол"},
+                                                  {value: "combined", label: "Комбинированная"}
+                                                ]}
+                                              />
+                                              
+                                              <EditableField 
+                                                label="Тип системы отопления" 
+                                                path="client.heatingSystemType"
+                                                options={[
+                                                  {value: "open", label: "Открытая"},
+                                                  {value: "closed", label: "Закрытая"}
+                                                ]}
+                                              />
                                             </div>
                                             
                                             <div className="mt-4">
