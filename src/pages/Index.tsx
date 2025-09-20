@@ -22,6 +22,16 @@ export default function Index() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [typeFilter, setTypeFilter] = useState<string>('all');
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [showBulkActions, setShowBulkActions] = useState(false);
+  const [advancedFilters, setAdvancedFilters] = useState({
+    dateFrom: '',
+    dateTo: '',
+    boilerType: '',
+    region: '',
+    workStatus: '',
+    searchField: 'all'
+  });
 
   // Функции для редактирования
   const startEditing = (installation: any) => {
@@ -48,6 +58,95 @@ export default function Index() {
     
     // Здесь можно добавить сохранение в базу данных
     console.log('Сохранены изменения:', editedInstallation);
+  };
+
+  // Функции для массовых действий
+  const toggleSelectAll = () => {
+    if (selectedIds.size === filteredData.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(filteredData.map(item => item.id)));
+    }
+  };
+
+  const toggleSelectItem = (id: string) => {
+    const newSelected = new Set(selectedIds);
+    if (newSelected.has(id)) {
+      newSelected.delete(id);
+    } else {
+      newSelected.add(id);
+    }
+    setSelectedIds(newSelected);
+  };
+
+  const bulkUpdateStatus = (newStatus: string) => {
+    if (selectedIds.size === 0) return;
+    
+    // Здесь должно быть обновление в базе данных
+    console.log(`Обновляем статус у ${selectedIds.size} заявок на: ${newStatus}`);
+    
+    // Очищаем выбор
+    setSelectedIds(new Set());
+    setShowBulkActions(false);
+  };
+
+  // Улучшенная фильтрация
+  const applyAdvancedFilter = (item: any) => {
+    // Фильтр по датам
+    if (advancedFilters.dateFrom) {
+      const itemDate = new Date(item.orderDate);
+      const fromDate = new Date(advancedFilters.dateFrom);
+      if (itemDate < fromDate) return false;
+    }
+    
+    if (advancedFilters.dateTo) {
+      const itemDate = new Date(item.orderDate);
+      const toDate = new Date(advancedFilters.dateTo);
+      if (itemDate > toDate) return false;
+    }
+
+    // Фильтр по типу котла
+    if (advancedFilters.boilerType && advancedFilters.boilerType !== 'all') {
+      if (item.boilerType !== advancedFilters.boilerType) return false;
+    }
+
+    // Фильтр по региону
+    if (advancedFilters.region && advancedFilters.region !== 'all') {
+      if (!item.client?.address?.toLowerCase().includes(advancedFilters.region.toLowerCase())) return false;
+    }
+
+    // Фильтр по статусу работ
+    if (advancedFilters.workStatus && advancedFilters.workStatus !== 'all') {
+      if (item.client?.workCompletionStatus !== advancedFilters.workStatus) return false;
+    }
+
+    return true;
+  };
+
+  // Улучшенный поиск
+  const applySearch = (item: any) => {
+    if (!searchQuery.trim()) return true;
+    
+    const query = searchQuery.toLowerCase();
+    
+    switch (advancedFilters.searchField) {
+      case 'name':
+        return item.client?.fullName?.toLowerCase().includes(query);
+      case 'phone':
+        return item.client?.phone?.includes(query);
+      case 'address':
+        return item.client?.address?.toLowerCase().includes(query);
+      case 'cadastral':
+        return item.client?.cadastralNumber?.includes(query);
+      default: // 'all'
+        return (
+          item.client?.fullName?.toLowerCase().includes(query) ||
+          item.client?.phone?.includes(query) ||
+          item.client?.address?.toLowerCase().includes(query) ||
+          item.client?.cadastralNumber?.includes(query) ||
+          item.boilerType?.toLowerCase().includes(query)
+        );
+    }
   };
 
   const updateField = (path: string, value: any) => {
@@ -463,16 +562,17 @@ export default function Index() {
 
   // Фильтрация данных
   const filteredData = allData.filter(item => {
-    const matchesSearch = searchQuery === '' || 
-      item.address.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.client.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.boilerType.toLowerCase().includes(searchQuery.toLowerCase());
+    // Применяем поиск
+    if (!applySearch(item)) return false;
     
+    // Применяем стандартные фильтры
     const matchesStatus = statusFilter === 'all' || item.status === statusFilter;
     const matchesType = typeFilter === 'all' || item.type === typeFilter;
     
-    return matchesSearch && matchesStatus && matchesType;
+    // Применяем расширенные фильтры
+    if (!applyAdvancedFilter(item)) return false;
+    
+    return matchesStatus && matchesType;
   });
 
 
@@ -721,32 +821,47 @@ export default function Index() {
                   <CardHeader>
                     <CardTitle>Поиск и фильтры</CardTitle>
                   </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                      <div className="flex items-center space-x-2">
-                        <Icon name="Search" size={16} className="text-muted-foreground" />
+                  <CardContent className="space-y-4">
+                    {/* Основной поиск */}
+                    <div className="flex space-x-2">
+                      <div className="relative flex-1">
+                        <Icon name="Search" size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
                         <Input
-                          placeholder="Поиск по адресу, клиенту, ID..."
+                          placeholder="Поиск..."
                           value={searchQuery}
                           onChange={(e) => setSearchQuery(e.target.value)}
-                          className="flex-1"
+                          className="pl-10"
                         />
                       </div>
-                      
+                      <Select 
+                        value={advancedFilters.searchField} 
+                        onValueChange={(value) => setAdvancedFilters(prev => ({...prev, searchField: value}))}
+                      >
+                        <SelectTrigger className="w-[180px]">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Все поля</SelectItem>
+                          <SelectItem value="name">Имя клиента</SelectItem>
+                          <SelectItem value="phone">Телефон</SelectItem>
+                          <SelectItem value="address">Адрес</SelectItem>
+                          <SelectItem value="cadastral">Кадастр</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    {/* Основные фильтры */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <Select value={statusFilter} onValueChange={setStatusFilter}>
                         <SelectTrigger>
-                          <SelectValue placeholder="Фильтр по статусу" />
+                          <SelectValue placeholder="Статус заявки" />
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="all">Все статусы</SelectItem>
-                          <SelectItem value="active">Активные</SelectItem>
-                          <SelectItem value="warning">Предупреждения</SelectItem>
-                          <SelectItem value="maintenance">Обслуживание</SelectItem>
-                          <SelectItem value="offline">Отключены</SelectItem>
-                          <SelectItem value="quotation">Комм. предложение</SelectItem>
-                          <SelectItem value="production">Производство</SelectItem>
-                          <SelectItem value="delivery">Доставка</SelectItem>
-                          <SelectItem value="installation">Монтаж</SelectItem>
+                          <SelectItem value="new">Новые</SelectItem>
+                          <SelectItem value="pending">В ожидании</SelectItem>
+                          <SelectItem value="approved">Одобрены</SelectItem>
+                          <SelectItem value="in_progress">В работе</SelectItem>
                           <SelectItem value="testing">Тестирование</SelectItem>
                           <SelectItem value="completed">Завершены</SelectItem>
                           <SelectItem value="canceled">Отменены</SelectItem>
@@ -763,28 +878,131 @@ export default function Index() {
                           <SelectItem value="installation">Новые установки</SelectItem>
                         </SelectContent>
                       </Select>
-                      
-                      <div className="flex space-x-2">
-                        <Button
-                          variant="outline"
-                          onClick={() => {
-                            setSearchQuery('');
-                            setStatusFilter('all');
-                            setTypeFilter('all');
-                          }}
-                        >
-                          <Icon name="X" size={16} className="mr-1" />
-                          Очистить
-                        </Button>
-                      </div>
+
+                      <Select 
+                        value={advancedFilters.boilerType} 
+                        onValueChange={(value) => setAdvancedFilters(prev => ({...prev, boilerType: value}))}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Тип котла" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Все типы</SelectItem>
+                          <SelectItem value="газовый">Газовый</SelectItem>
+                          <SelectItem value="электрический">Электрический</SelectItem>
+                          <SelectItem value="твердотопливный">Твердотопливный</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
+
+                    {/* Расширенные фильтры */}
+                    <details className="space-y-4">
+                      <summary className="cursor-pointer text-sm font-medium text-primary hover:text-primary/80">
+                        Расширенные фильтры
+                      </summary>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+                        <div>
+                          <Label className="text-sm">Дата от</Label>
+                          <Input
+                            type="date"
+                            value={advancedFilters.dateFrom}
+                            onChange={(e) => setAdvancedFilters(prev => ({...prev, dateFrom: e.target.value}))}
+                          />
+                        </div>
+                        <div>
+                          <Label className="text-sm">Дата до</Label>
+                          <Input
+                            type="date"
+                            value={advancedFilters.dateTo}
+                            onChange={(e) => setAdvancedFilters(prev => ({...prev, dateTo: e.target.value}))}
+                          />
+                        </div>
+                        <Select 
+                          value={advancedFilters.workStatus} 
+                          onValueChange={(value) => setAdvancedFilters(prev => ({...prev, workStatus: value}))}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Статус работ" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">Все статусы</SelectItem>
+                            <SelectItem value="pending">В ожидании</SelectItem>
+                            <SelectItem value="in_progress">В работе</SelectItem>
+                            <SelectItem value="completed">Завершена</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </details>
                     
-                    <div className="mt-4 text-sm text-muted-foreground">
-                      Найдено: {filteredData.length} из {allData.length} объектов
+                    <div className="flex justify-between items-center">
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          setSearchQuery('');
+                          setStatusFilter('all');
+                          setTypeFilter('all');
+                          setAdvancedFilters({
+                            dateFrom: '',
+                            dateTo: '',
+                            boilerType: 'all',
+                            region: '',
+                            workStatus: 'all',
+                            searchField: 'all'
+                          });
+                          setSelectedIds(new Set());
+                        }}
+                      >
+                        <Icon name="X" size={16} className="mr-1" />
+                        Очистить все
+                      </Button>
+                      
+                      <div className="text-sm text-muted-foreground">
+                        Найдено: {filteredData.length} из {allData.length} объектов
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
                 
+                {/* Панель массовых действий */}
+                {selectedIds.size > 0 && (
+                  <Card className="border-primary/20 bg-primary/5">
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2">
+                          <Icon name="CheckSquare" size={16} className="text-primary" />
+                          <span className="text-sm font-medium">
+                            Выбрано: {selectedIds.size} заявок
+                          </span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Select onValueChange={(value) => bulkUpdateStatus(value)}>
+                            <SelectTrigger className="w-[200px]">
+                              <SelectValue placeholder="Изменить статус" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="new">Новые</SelectItem>
+                              <SelectItem value="pending">В ожидании</SelectItem>
+                              <SelectItem value="approved">Одобрены</SelectItem>
+                              <SelectItem value="in_progress">В работе</SelectItem>
+                              <SelectItem value="testing">Тестирование</SelectItem>
+                              <SelectItem value="completed">Завершены</SelectItem>
+                              <SelectItem value="canceled">Отменены</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => setSelectedIds(new Set())}
+                          >
+                            <Icon name="X" size={16} className="mr-1" />
+                            Отменить выбор
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
                 {/* Основная таблица */}
                 <Card>
                   <CardHeader>
@@ -795,6 +1013,14 @@ export default function Index() {
                     <Table>
                       <TableHeader>
                         <TableRow>
+                          <TableHead className="w-[50px]">
+                            <input
+                              type="checkbox"
+                              checked={selectedIds.size === filteredData.length && filteredData.length > 0}
+                              onChange={toggleSelectAll}
+                              className="rounded border-gray-300"
+                            />
+                          </TableHead>
                           <TableHead>ID</TableHead>
                           <TableHead>Адрес</TableHead>
                           <TableHead>Клиент</TableHead>
@@ -808,6 +1034,14 @@ export default function Index() {
                       <TableBody>
                         {filteredData.map((item) => (
                           <TableRow key={item.id}>
+                            <TableCell>
+                              <input
+                                type="checkbox"
+                                checked={selectedIds.has(item.id)}
+                                onChange={() => toggleSelectItem(item.id)}
+                                className="rounded border-gray-300"
+                              />
+                            </TableCell>
                             <TableCell className="font-medium">{item.id}</TableCell>
                             <TableCell>{item.address}</TableCell>
                             <TableCell>
