@@ -32,6 +32,10 @@ export default function Index() {
     workStatus: '',
     searchField: 'all'
   });
+  const [sortConfig, setSortConfig] = useState({
+    field: 'id',
+    direction: 'asc'
+  });
 
   // Функции для редактирования
   const startEditing = (installation: any) => {
@@ -147,6 +151,47 @@ export default function Index() {
           item.boilerType?.toLowerCase().includes(query)
         );
     }
+  };
+
+  // Функции сортировки
+  const handleSort = (field: string) => {
+    setSortConfig(prev => ({
+      field,
+      direction: prev.field === field && prev.direction === 'asc' ? 'desc' : 'asc'
+    }));
+  };
+
+  const extractHouseNumber = (address: string): number => {
+    // Извлекаем номер дома из адреса (ищем числа после "д.", "дом", или отдельно стоящие числа)
+    const match = address.match(/(?:д\.|дом\s+|,\s*)(\d+)/i);
+    return match ? parseInt(match[1]) : 0;
+  };
+
+  const sortData = (data: any[]) => {
+    return [...data].sort((a, b) => {
+      let aValue, bValue;
+      
+      switch (sortConfig.field) {
+        case 'id':
+          // Сортировка по ID (числовая)
+          aValue = parseInt(a.id.replace(/\D/g, '')) || 0;
+          bValue = parseInt(b.id.replace(/\D/g, '')) || 0;
+          break;
+        case 'address':
+          // Сортировка по номеру дома
+          aValue = extractHouseNumber(a.address);
+          bValue = extractHouseNumber(b.address);
+          break;
+        default:
+          return 0;
+      }
+      
+      if (sortConfig.direction === 'asc') {
+        return aValue - bValue;
+      } else {
+        return bValue - aValue;
+      }
+    });
   };
 
   const updateField = (path: string, value: any) => {
@@ -560,20 +605,27 @@ export default function Index() {
     }
   ];
 
-  // Фильтрация данных
-  const filteredData = allData.filter(item => {
-    // Применяем поиск
-    if (!applySearch(item)) return false;
+  // Фильтрация и сортировка данных
+  const filteredAndSortedData = (() => {
+    const filtered = allData.filter(item => {
+      // Применяем поиск
+      if (!applySearch(item)) return false;
+      
+      // Применяем стандартные фильтры
+      const matchesStatus = statusFilter === 'all' || item.status === statusFilter;
+      const matchesType = typeFilter === 'all' || item.type === typeFilter;
+      
+      // Применяем расширенные фильтры
+      if (!applyAdvancedFilter(item)) return false;
+      
+      return matchesStatus && matchesType;
+    });
     
-    // Применяем стандартные фильтры
-    const matchesStatus = statusFilter === 'all' || item.status === statusFilter;
-    const matchesType = typeFilter === 'all' || item.type === typeFilter;
-    
-    // Применяем расширенные фильтры
-    if (!applyAdvancedFilter(item)) return false;
-    
-    return matchesStatus && matchesType;
-  });
+    return sortData(filtered);
+  })();
+  
+  // Для обратной совместимости
+  const filteredData = filteredAndSortedData;
 
 
 
@@ -935,26 +987,48 @@ export default function Index() {
                     </details>
                     
                     <div className="flex justify-between items-center">
-                      <Button
-                        variant="outline"
-                        onClick={() => {
-                          setSearchQuery('');
-                          setStatusFilter('all');
-                          setTypeFilter('all');
-                          setAdvancedFilters({
-                            dateFrom: '',
-                            dateTo: '',
-                            boilerType: 'all',
-                            region: '',
-                            workStatus: 'all',
-                            searchField: 'all'
-                          });
-                          setSelectedIds(new Set());
-                        }}
-                      >
-                        <Icon name="X" size={16} className="mr-1" />
-                        Очистить все
-                      </Button>
+                      <div className="flex items-center space-x-2">
+                        <Button
+                          variant="outline"
+                          onClick={() => {
+                            setSearchQuery('');
+                            setStatusFilter('all');
+                            setTypeFilter('all');
+                            setAdvancedFilters({
+                              dateFrom: '',
+                              dateTo: '',
+                              boilerType: 'all',
+                              region: '',
+                              workStatus: 'all',
+                              searchField: 'all'
+                            });
+                            setSelectedIds(new Set());
+                          }}
+                        >
+                          <Icon name="X" size={16} className="mr-1" />
+                          Очистить все
+                        </Button>
+                        
+                        <div className="flex items-center space-x-1 text-sm text-muted-foreground">
+                          <span>Сортировка:</span>
+                          <Button
+                            variant={sortConfig.field === 'id' ? 'default' : 'ghost'}
+                            size="sm"
+                            onClick={() => handleSort('id')}
+                            className="h-8"
+                          >
+                            ID {sortConfig.field === 'id' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                          </Button>
+                          <Button
+                            variant={sortConfig.field === 'address' ? 'default' : 'ghost'}
+                            size="sm"
+                            onClick={() => handleSort('address')}
+                            className="h-8"
+                          >
+                            Номер дома {sortConfig.field === 'address' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                          </Button>
+                        </div>
+                      </div>
                       
                       <div className="text-sm text-muted-foreground">
                         Найдено: {filteredData.length} из {allData.length} объектов
@@ -1021,8 +1095,36 @@ export default function Index() {
                               className="rounded border-gray-300"
                             />
                           </TableHead>
-                          <TableHead>ID</TableHead>
-                          <TableHead>Адрес</TableHead>
+                          <TableHead 
+                            className="cursor-pointer hover:bg-gray-50 select-none"
+                            onClick={() => handleSort('id')}
+                          >
+                            <div className="flex items-center space-x-1">
+                              <span>ID</span>
+                              {sortConfig.field === 'id' && (
+                                <Icon 
+                                  name={sortConfig.direction === 'asc' ? 'ChevronUp' : 'ChevronDown'} 
+                                  size={16} 
+                                  className="text-primary"
+                                />
+                              )}
+                            </div>
+                          </TableHead>
+                          <TableHead 
+                            className="cursor-pointer hover:bg-gray-50 select-none"
+                            onClick={() => handleSort('address')}
+                          >
+                            <div className="flex items-center space-x-1">
+                              <span>Адрес (по номеру дома)</span>
+                              {sortConfig.field === 'address' && (
+                                <Icon 
+                                  name={sortConfig.direction === 'asc' ? 'ChevronUp' : 'ChevronDown'} 
+                                  size={16} 
+                                  className="text-primary"
+                                />
+                              )}
+                            </div>
+                          </TableHead>
                           <TableHead>Клиент</TableHead>
                           <TableHead>Тип котла</TableHead>
                           <TableHead>Статус</TableHead>
