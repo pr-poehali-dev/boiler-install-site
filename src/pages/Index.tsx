@@ -5,11 +5,17 @@ import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Calendar } from "@/components/ui/calendar";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Icon from "@/components/ui/icon";
 import { useState } from "react";
 
 export default function Index() {
   const [date, setDate] = useState<Date | undefined>(new Date());
+  const [selectedInstallation, setSelectedInstallation] = useState<any>(null);
 
   const boilerData = [
     { id: "BLR-001", address: "ул. Ленина, 15", status: "active", temp: 72, lastService: "2024-08-15" },
@@ -17,6 +23,81 @@ export default function Index() {
     { id: "BLR-003", address: "ул. Гагарина, 8", status: "offline", temp: 0, lastService: "2024-07-20" },
     { id: "BLR-004", address: "ул. Мира, 45", status: "active", temp: 68, lastService: "2024-08-28" },
     { id: "BLR-005", address: "ул. Советская, 12", status: "warning", temp: 85, lastService: "2024-09-10" }
+  ];
+
+  const installationData = [
+    {
+      id: "INS-001",
+      address: "ул. Новая, 25",
+      client: {
+        fullName: "Иванов Иван Иванович",
+        phone: "+7 (999) 123-45-67",
+        email: "ivanov@example.com",
+        passport: "1234 567890",
+        inn: "123456789012"
+      },
+      status: "production",
+      orderDate: "2024-09-15",
+      plannedDate: "2024-09-25",
+      boilerType: "Котел газовый 24кВт",
+      progress: 20,
+      documents: ["contract.pdf", "technical_spec.pdf"],
+      photos: []
+    },
+    {
+      id: "INS-002", 
+      address: "ул. Строителей, 12",
+      client: {
+        fullName: "Петрова Марина Сергеевна",
+        phone: "+7 (999) 234-56-78",
+        email: "petrova@example.com",
+        passport: "2345 678901",
+        inn: "234567890123"
+      },
+      status: "delivery",
+      orderDate: "2024-09-10",
+      plannedDate: "2024-09-22",
+      boilerType: "Котел конденсационный 28кВт",
+      progress: 60,
+      documents: ["contract.pdf", "passport_copy.pdf"],
+      photos: ["site_before_1.jpg"]
+    },
+    {
+      id: "INS-003",
+      address: "пр. Мира, 88",
+      client: {
+        fullName: "Сидоров Петр Алексеевич", 
+        phone: "+7 (999) 345-67-89",
+        email: "sidorov@example.com",
+        passport: "3456 789012",
+        inn: "345678901234"
+      },
+      status: "installation",
+      orderDate: "2024-09-05",
+      plannedDate: "2024-09-20",
+      boilerType: "Котел электрический 15кВт",
+      progress: 85,
+      documents: ["contract.pdf", "installation_permit.pdf"],
+      photos: ["site_before_1.jpg", "installation_1.jpg", "installation_2.jpg"]
+    },
+    {
+      id: "INS-004",
+      address: "ул. Садовая, 45",
+      client: {
+        fullName: "Козлова Анна Дмитриевна",
+        phone: "+7 (999) 456-78-90", 
+        email: "kozlova@example.com",
+        passport: "4567 890123",
+        inn: "456789012345"
+      },
+      status: "completed",
+      orderDate: "2024-08-20",
+      plannedDate: "2024-09-15",
+      boilerType: "Котел комбинированный 32кВт",
+      progress: 100,
+      documents: ["contract.pdf", "completion_act.pdf", "warranty.pdf"],
+      photos: ["site_before_1.jpg", "installation_1.jpg", "completed_1.jpg", "completed_2.jpg"]
+    }
   ];
 
   const getStatusColor = (status: string) => {
@@ -35,6 +116,28 @@ export default function Index() {
       case "warning": return "Предупреждение";
       case "maintenance": return "Обслуживание";
       case "offline": return "Отключен";
+      default: return "Неизвестно";
+    }
+  };
+
+  const getInstallationStatusColor = (status: string) => {
+    switch (status) {
+      case "production": return "bg-orange-500";
+      case "delivery": return "bg-blue-500";
+      case "installation": return "bg-purple-500";
+      case "testing": return "bg-yellow-500";
+      case "completed": return "bg-green-500";
+      default: return "bg-gray-500";
+    }
+  };
+
+  const getInstallationStatusText = (status: string) => {
+    switch (status) {
+      case "production": return "Производство";
+      case "delivery": return "Доставка";
+      case "installation": return "Монтаж";
+      case "testing": return "Тестирование";
+      case "completed": return "Завершен";
       default: return "Неизвестно";
     }
   };
@@ -160,6 +263,7 @@ export default function Index() {
               <TabsList>
                 <TabsTrigger value="overview">Обзор</TabsTrigger>
                 <TabsTrigger value="boilers">Список котлов</TabsTrigger>
+                <TabsTrigger value="installations">Монтажи</TabsTrigger>
                 <TabsTrigger value="calendar">Календарь</TabsTrigger>
                 <TabsTrigger value="map">Карта</TabsTrigger>
               </TabsList>
@@ -280,6 +384,257 @@ export default function Index() {
                                 <Button variant="outline" size="sm">
                                   <Icon name="Settings" size={14} className="mr-1" />
                                   Настройки
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="installations" className="space-y-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Управление монтажами</CardTitle>
+                    <CardDescription>Контроль этапов установки котлов и работа с клиентами</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>ID</TableHead>
+                          <TableHead>Адрес</TableHead>
+                          <TableHead>Клиент</TableHead>
+                          <TableHead>Статус</TableHead>
+                          <TableHead>Прогресс</TableHead>
+                          <TableHead>Дата план.</TableHead>
+                          <TableHead>Действия</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {installationData.map((installation) => (
+                          <TableRow key={installation.id}>
+                            <TableCell className="font-medium">{installation.id}</TableCell>
+                            <TableCell>{installation.address}</TableCell>
+                            <TableCell>
+                              <div className="flex items-center space-x-2">
+                                <Avatar className="h-8 w-8">
+                                  <AvatarFallback>
+                                    {installation.client.fullName.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <span className="text-sm">{installation.client.fullName}</span>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant="secondary" className={`${getInstallationStatusColor(installation.status)} text-white`}>
+                                {getInstallationStatusText(installation.status)}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center space-x-2">
+                                <Progress value={installation.progress} className="w-16 h-2" />
+                                <span className="text-sm text-muted-foreground">{installation.progress}%</span>
+                              </div>
+                            </TableCell>
+                            <TableCell>{installation.plannedDate}</TableCell>
+                            <TableCell>
+                              <div className="flex space-x-2">
+                                <Dialog>
+                                  <DialogTrigger asChild>
+                                    <Button 
+                                      variant="outline" 
+                                      size="sm"
+                                      onClick={() => setSelectedInstallation(installation)}
+                                    >
+                                      <Icon name="Eye" size={14} className="mr-1" />
+                                      Детали
+                                    </Button>
+                                  </DialogTrigger>
+                                  <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+                                    <DialogHeader>
+                                      <DialogTitle>Детали установки {installation.id}</DialogTitle>
+                                      <DialogDescription>
+                                        Полная информация о клиенте, прогрессе установки и документах
+                                      </DialogDescription>
+                                    </DialogHeader>
+                                    
+                                    {selectedInstallation && (
+                                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                        {/* Информация о клиенте */}
+                                        <Card>
+                                          <CardHeader>
+                                            <CardTitle className="text-lg">Информация о клиенте</CardTitle>
+                                          </CardHeader>
+                                          <CardContent className="space-y-4">
+                                            <div className="flex items-center space-x-4">
+                                              <Avatar className="h-12 w-12">
+                                                <AvatarFallback className="text-lg">
+                                                  {selectedInstallation.client.fullName.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                                                </AvatarFallback>
+                                              </Avatar>
+                                              <div>
+                                                <h3 className="font-medium">{selectedInstallation.client.fullName}</h3>
+                                                <p className="text-sm text-muted-foreground">{selectedInstallation.address}</p>
+                                              </div>
+                                            </div>
+                                            
+                                            <div className="grid grid-cols-1 gap-3">
+                                              <div>
+                                                <Label className="text-sm font-medium">Телефон</Label>
+                                                <Input value={selectedInstallation.client.phone} readOnly />
+                                              </div>
+                                              <div>
+                                                <Label className="text-sm font-medium">Email</Label>
+                                                <Input value={selectedInstallation.client.email} readOnly />
+                                              </div>
+                                              <div>
+                                                <Label className="text-sm font-medium">Паспорт</Label>
+                                                <Input value={selectedInstallation.client.passport} readOnly />
+                                              </div>
+                                              <div>
+                                                <Label className="text-sm font-medium">ИНН</Label>
+                                                <Input value={selectedInstallation.client.inn} readOnly />
+                                              </div>
+                                            </div>
+                                          </CardContent>
+                                        </Card>
+
+                                        {/* Информация о заказе */}
+                                        <Card>
+                                          <CardHeader>
+                                            <CardTitle className="text-lg">Детали заказа</CardTitle>
+                                          </CardHeader>
+                                          <CardContent className="space-y-4">
+                                            <div className="space-y-3">
+                                              <div>
+                                                <Label className="text-sm font-medium">Тип котла</Label>
+                                                <Input value={selectedInstallation.boilerType} readOnly />
+                                              </div>
+                                              <div>
+                                                <Label className="text-sm font-medium">Дата заказа</Label>
+                                                <Input value={selectedInstallation.orderDate} readOnly />
+                                              </div>
+                                              <div>
+                                                <Label className="text-sm font-medium">Планируемая дата</Label>
+                                                <Input value={selectedInstallation.plannedDate} readOnly />
+                                              </div>
+                                              <div>
+                                                <Label className="text-sm font-medium">Статус</Label>
+                                                <Badge className={`${getInstallationStatusColor(selectedInstallation.status)} text-white`}>
+                                                  {getInstallationStatusText(selectedInstallation.status)}
+                                                </Badge>
+                                              </div>
+                                              <div>
+                                                <Label className="text-sm font-medium">Прогресс: {selectedInstallation.progress}%</Label>
+                                                <Progress value={selectedInstallation.progress} className="mt-2" />
+                                              </div>
+                                            </div>
+                                          </CardContent>
+                                        </Card>
+
+                                        {/* Документы */}
+                                        <Card>
+                                          <CardHeader>
+                                            <CardTitle className="text-lg">Документы</CardTitle>
+                                          </CardHeader>
+                                          <CardContent>
+                                            <div className="space-y-3">
+                                              {selectedInstallation.documents.map((doc, index) => (
+                                                <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
+                                                  <div className="flex items-center space-x-2">
+                                                    <Icon name="FileText" size={16} className="text-blue-500" />
+                                                    <span className="text-sm">{doc}</span>
+                                                  </div>
+                                                  <div className="flex space-x-2">
+                                                    <Button variant="outline" size="sm">
+                                                      <Icon name="Download" size={14} className="mr-1" />
+                                                      Скачать
+                                                    </Button>
+                                                    <Button variant="outline" size="sm">
+                                                      <Icon name="Eye" size={14} className="mr-1" />
+                                                      Просмотр
+                                                    </Button>
+                                                  </div>
+                                                </div>
+                                              ))}
+                                              
+                                              <Button variant="outline" className="w-full">
+                                                <Icon name="Plus" size={16} className="mr-2" />
+                                                Добавить документ
+                                              </Button>
+                                            </div>
+                                          </CardContent>
+                                        </Card>
+
+                                        {/* Фотографии */}
+                                        <Card>
+                                          <CardHeader>
+                                            <CardTitle className="text-lg">Фотографии</CardTitle>
+                                          </CardHeader>
+                                          <CardContent>
+                                            <div className="space-y-4">
+                                              <div>
+                                                <h4 className="font-medium mb-2">До установки</h4>
+                                                <div className="grid grid-cols-2 gap-2">
+                                                  {selectedInstallation.photos
+                                                    .filter(photo => photo.includes('before'))
+                                                    .map((photo, index) => (
+                                                    <div key={index} className="aspect-square bg-muted rounded-lg flex items-center justify-center">
+                                                      <Icon name="Image" size={24} className="text-muted-foreground" />
+                                                    </div>
+                                                  ))}
+                                                  <Button variant="outline" className="aspect-square">
+                                                    <Icon name="Plus" size={16} />
+                                                  </Button>
+                                                </div>
+                                              </div>
+                                              
+                                              <div>
+                                                <h4 className="font-medium mb-2">Процесс установки</h4>
+                                                <div className="grid grid-cols-2 gap-2">
+                                                  {selectedInstallation.photos
+                                                    .filter(photo => photo.includes('installation'))
+                                                    .map((photo, index) => (
+                                                    <div key={index} className="aspect-square bg-muted rounded-lg flex items-center justify-center">
+                                                      <Icon name="Image" size={24} className="text-muted-foreground" />
+                                                    </div>
+                                                  ))}
+                                                  <Button variant="outline" className="aspect-square">
+                                                    <Icon name="Plus" size={16} />
+                                                  </Button>
+                                                </div>
+                                              </div>
+                                              
+                                              <div>
+                                                <h4 className="font-medium mb-2">После установки</h4>
+                                                <div className="grid grid-cols-2 gap-2">
+                                                  {selectedInstallation.photos
+                                                    .filter(photo => photo.includes('completed'))
+                                                    .map((photo, index) => (
+                                                    <div key={index} className="aspect-square bg-muted rounded-lg flex items-center justify-center">
+                                                      <Icon name="Image" size={24} className="text-muted-foreground" />
+                                                    </div>
+                                                  ))}
+                                                  <Button variant="outline" className="aspect-square">
+                                                    <Icon name="Plus" size={16} />
+                                                  </Button>
+                                                </div>
+                                              </div>
+                                            </div>
+                                          </CardContent>
+                                        </Card>
+                                      </div>
+                                    )}
+                                  </DialogContent>
+                                </Dialog>
+                                
+                                <Button variant="outline" size="sm">
+                                  <Icon name="Edit" size={14} className="mr-1" />
+                                  Изменить
                                 </Button>
                               </div>
                             </TableCell>
