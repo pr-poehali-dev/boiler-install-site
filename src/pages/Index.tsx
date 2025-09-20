@@ -167,6 +167,28 @@ export default function Index() {
     return match ? parseInt(match[1]) : 0;
   };
 
+  const getStatusPriority = (status: string): number => {
+    // Определяем приоритет статусов для сортировки
+    const priorities: { [key: string]: number } = {
+      'new': 1,
+      'pending': 2,
+      'approved': 3,
+      'in_progress': 4,
+      'testing': 5,
+      'completed': 6,
+      'canceled': 7,
+      'active': 1,
+      'warning': 2,
+      'maintenance': 3,
+      'offline': 4,
+      'quotation': 5,
+      'production': 6,
+      'delivery': 7,
+      'installation': 8
+    };
+    return priorities[status] || 999;
+  };
+
   const sortData = (data: any[]) => {
     return [...data].sort((a, b) => {
       let aValue, bValue;
@@ -181,6 +203,16 @@ export default function Index() {
           // Сортировка по номеру дома
           aValue = extractHouseNumber(a.address);
           bValue = extractHouseNumber(b.address);
+          break;
+        case 'date':
+          // Сортировка по дате создания
+          aValue = new Date(a.orderDate || a.date || '1970-01-01').getTime();
+          bValue = new Date(b.orderDate || b.date || '1970-01-01').getTime();
+          break;
+        case 'status':
+          // Сортировка по статусу (по приоритету)
+          aValue = getStatusPriority(a.status);
+          bValue = getStatusPriority(b.status);
           break;
         default:
           return 0;
@@ -1027,6 +1059,22 @@ export default function Index() {
                           >
                             Номер дома {sortConfig.field === 'address' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
                           </Button>
+                          <Button
+                            variant={sortConfig.field === 'date' ? 'default' : 'ghost'}
+                            size="sm"
+                            onClick={() => handleSort('date')}
+                            className="h-8"
+                          >
+                            Дата {sortConfig.field === 'date' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                          </Button>
+                          <Button
+                            variant={sortConfig.field === 'status' ? 'default' : 'ghost'}
+                            size="sm"
+                            onClick={() => handleSort('status')}
+                            className="h-8"
+                          >
+                            Статус {sortConfig.field === 'status' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                          </Button>
                         </div>
                       </div>
                       
@@ -1127,9 +1175,37 @@ export default function Index() {
                           </TableHead>
                           <TableHead>Клиент</TableHead>
                           <TableHead>Тип котла</TableHead>
-                          <TableHead>Статус</TableHead>
+                          <TableHead 
+                            className="cursor-pointer hover:bg-gray-50 select-none"
+                            onClick={() => handleSort('status')}
+                          >
+                            <div className="flex items-center space-x-1">
+                              <span>Статус</span>
+                              {sortConfig.field === 'status' && (
+                                <Icon 
+                                  name={sortConfig.direction === 'asc' ? 'ChevronUp' : 'ChevronDown'} 
+                                  size={16} 
+                                  className="text-primary"
+                                />
+                              )}
+                            </div>
+                          </TableHead>
                           <TableHead>Прогресс</TableHead>
-                          <TableHead>Дата</TableHead>
+                          <TableHead 
+                            className="cursor-pointer hover:bg-gray-50 select-none"
+                            onClick={() => handleSort('date')}
+                          >
+                            <div className="flex items-center space-x-1">
+                              <span>Дата</span>
+                              {sortConfig.field === 'date' && (
+                                <Icon 
+                                  name={sortConfig.direction === 'asc' ? 'ChevronUp' : 'ChevronDown'} 
+                                  size={16} 
+                                  className="text-primary"
+                                />
+                              )}
+                            </div>
+                          </TableHead>
                           <TableHead>Действия</TableHead>
                         </TableRow>
                       </TableHeader>
