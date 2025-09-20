@@ -278,25 +278,7 @@ export default function Index() {
     return matchesSearch && matchesStatus && matchesType;
   });
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "active": return "bg-green-500";
-      case "warning": return "bg-yellow-500";
-      case "maintenance": return "bg-blue-500";
-      case "offline": return "bg-red-500";
-      default: return "bg-gray-500";
-    }
-  };
 
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case "active": return "Активен";
-      case "warning": return "Предупреждение";
-      case "maintenance": return "Обслуживание";
-      case "offline": return "Отключен";
-      default: return "Неизвестно";
-    }
-  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
