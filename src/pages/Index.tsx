@@ -739,8 +739,8 @@ export default function Index() {
                                               </div>
                                               <div>
                                                 <Label className="text-sm font-medium">Статус</Label>
-                                                <Badge className={`${getInstallationStatusColor(selectedInstallation.status)} text-white`}>
-                                                  {getInstallationStatusText(selectedInstallation.status)}
+                                                <Badge className={`${getStatusColor(selectedInstallation.status)} text-white`}>
+                                                  {getStatusText(selectedInstallation.status)}
                                                 </Badge>
                                               </div>
                                               <div>
