@@ -10,22 +10,125 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import Icon from "@/components/ui/icon";
 import { useState } from "react";
 
 export default function Index() {
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [selectedInstallation, setSelectedInstallation] = useState<any>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [typeFilter, setTypeFilter] = useState<string>('all');
 
-  const boilerData = [
-    { id: "BLR-001", address: "ул. Ленина, 15", status: "active", temp: 72, lastService: "2024-08-15" },
-    { id: "BLR-002", address: "пр. Победы, 32", status: "maintenance", temp: 45, lastService: "2024-09-01" },
-    { id: "BLR-003", address: "ул. Гагарина, 8", status: "offline", temp: 0, lastService: "2024-07-20" },
-    { id: "BLR-004", address: "ул. Мира, 45", status: "active", temp: 68, lastService: "2024-08-28" },
-    { id: "BLR-005", address: "ул. Советская, 12", status: "warning", temp: 85, lastService: "2024-09-10" }
-  ];
-
-  const installationData = [
+  const allData = [
+    // Установленные котлы
+    {
+      id: "BLR-001",
+      address: "ул. Ленина, 15",
+      client: {
+        fullName: "Смирнов Олег Петрович",
+        phone: "+7 (999) 111-11-11",
+        email: "smirnov@example.com",
+        passport: "1111 111111",
+        inn: "111111111111"
+      },
+      status: "active",
+      temp: 72,
+      lastService: "2024-08-15",
+      boilerType: "Котел газовый 24кВт",
+      type: "existing",
+      progress: 100,
+      orderDate: "2024-01-10",
+      plannedDate: "2024-02-15",
+      documents: ["warranty.pdf", "manual.pdf"],
+      photos: ["completed_1.jpg", "completed_2.jpg"]
+    },
+    {
+      id: "BLR-002",
+      address: "пр. Победы, 32",
+      client: {
+        fullName: "Волкова Елена Александровна",
+        phone: "+7 (999) 222-22-22",
+        email: "volkova@example.com",
+        passport: "2222 222222",
+        inn: "222222222222"
+      },
+      status: "maintenance",
+      temp: 45,
+      lastService: "2024-09-01",
+      boilerType: "Котел конденсационный 20кВт",
+      type: "existing",
+      progress: 100,
+      orderDate: "2024-02-05",
+      plannedDate: "2024-03-12",
+      documents: ["warranty.pdf", "service_log.pdf"],
+      photos: ["maintenance_1.jpg"]
+    },
+    {
+      id: "BLR-003",
+      address: "ул. Гагарина, 8",
+      client: {
+        fullName: "Морозов Андрей Викторович",
+        phone: "+7 (999) 333-33-33",
+        email: "morozov@example.com",
+        passport: "3333 333333",
+        inn: "333333333333"
+      },
+      status: "offline",
+      temp: 0,
+      lastService: "2024-07-20",
+      boilerType: "Котел электрический 18кВт",
+      type: "existing",
+      progress: 100,
+      orderDate: "2024-01-15",
+      plannedDate: "2024-02-28",
+      documents: ["warranty.pdf"],
+      photos: ["offline_issue.jpg"]
+    },
+    {
+      id: "BLR-004",
+      address: "ул. Мира, 45",
+      client: {
+        fullName: "Федоров Дмитрий Сергеевич",
+        phone: "+7 (999) 444-44-44",
+        email: "fedorov@example.com",
+        passport: "4444 444444",
+        inn: "444444444444"
+      },
+      status: "active",
+      temp: 68,
+      lastService: "2024-08-28",
+      boilerType: "Котел газовый 30кВт",
+      type: "existing",
+      progress: 100,
+      orderDate: "2024-03-01",
+      plannedDate: "2024-04-10",
+      documents: ["warranty.pdf", "manual.pdf", "certificate.pdf"],
+      photos: ["completed_1.jpg", "completed_2.jpg"]
+    },
+    {
+      id: "BLR-005",
+      address: "ул. Советская, 12",
+      client: {
+        fullName: "Кузнецова Ирина Владимировна",
+        phone: "+7 (999) 555-55-55",
+        email: "kuznetsova@example.com",
+        passport: "5555 555555",
+        inn: "555555555555"
+      },
+      status: "warning",
+      temp: 85,
+      lastService: "2024-09-10",
+      boilerType: "Котел комбинированный 25кВт",
+      type: "existing",
+      progress: 100,
+      orderDate: "2024-02-15",
+      plannedDate: "2024-03-25",
+      documents: ["warranty.pdf", "service_alert.pdf"],
+      photos: ["warning_temp.jpg"]
+    },
+    // Новые установки в процессе
     {
       id: "INS-001",
       address: "ул. Новая, 25",
@@ -36,16 +139,17 @@ export default function Index() {
         passport: "1234 567890",
         inn: "123456789012"
       },
-      status: "production",
+      status: "quotation",
       orderDate: "2024-09-15",
       plannedDate: "2024-09-25",
       boilerType: "Котел газовый 24кВт",
-      progress: 20,
-      documents: ["contract.pdf", "technical_spec.pdf"],
+      progress: 10,
+      type: "installation",
+      documents: ["quotation.pdf"],
       photos: []
     },
     {
-      id: "INS-002", 
+      id: "INS-002",
       address: "ул. Строителей, 12",
       client: {
         fullName: "Петрова Марина Сергеевна",
@@ -54,19 +158,39 @@ export default function Index() {
         passport: "2345 678901",
         inn: "234567890123"
       },
-      status: "delivery",
+      status: "production",
       orderDate: "2024-09-10",
       plannedDate: "2024-09-22",
       boilerType: "Котел конденсационный 28кВт",
+      progress: 30,
+      type: "installation",
+      documents: ["contract.pdf", "technical_spec.pdf"],
+      photos: []
+    },
+    {
+      id: "INS-003",
+      address: "ул. Парковая, 67",
+      client: {
+        fullName: "Николаев Сергей Михайлович",
+        phone: "+7 (999) 666-66-66",
+        email: "nikolaev@example.com",
+        passport: "6666 666666",
+        inn: "666666666666"
+      },
+      status: "delivery",
+      orderDate: "2024-09-08",
+      plannedDate: "2024-09-20",
+      boilerType: "Котел электрический 22кВт",
       progress: 60,
+      type: "installation",
       documents: ["contract.pdf", "passport_copy.pdf"],
       photos: ["site_before_1.jpg"]
     },
     {
-      id: "INS-003",
+      id: "INS-004",
       address: "пр. Мира, 88",
       client: {
-        fullName: "Сидоров Петр Алексеевич", 
+        fullName: "Сидоров Петр Алексеевич",
         phone: "+7 (999) 345-67-89",
         email: "sidorov@example.com",
         passport: "3456 789012",
@@ -77,28 +201,82 @@ export default function Index() {
       plannedDate: "2024-09-20",
       boilerType: "Котел электрический 15кВт",
       progress: 85,
+      type: "installation",
       documents: ["contract.pdf", "installation_permit.pdf"],
       photos: ["site_before_1.jpg", "installation_1.jpg", "installation_2.jpg"]
     },
     {
-      id: "INS-004",
+      id: "INS-005",
       address: "ул. Садовая, 45",
       client: {
         fullName: "Козлова Анна Дмитриевна",
-        phone: "+7 (999) 456-78-90", 
+        phone: "+7 (999) 456-78-90",
         email: "kozlova@example.com",
         passport: "4567 890123",
         inn: "456789012345"
       },
-      status: "completed",
+      status: "testing",
       orderDate: "2024-08-20",
       plannedDate: "2024-09-15",
       boilerType: "Котел комбинированный 32кВт",
+      progress: 95,
+      type: "installation",
+      documents: ["contract.pdf", "installation_act.pdf"],
+      photos: ["site_before_1.jpg", "installation_1.jpg", "testing_1.jpg"]
+    },
+    {
+      id: "INS-006",
+      address: "ул. Весенняя, 18",
+      client: {
+        fullName: "Романов Алексей Игоревич",
+        phone: "+7 (999) 777-77-77",
+        email: "romanov@example.com",
+        passport: "7777 777777",
+        inn: "777777777777"
+      },
+      status: "completed",
+      orderDate: "2024-08-15",
+      plannedDate: "2024-09-10",
+      boilerType: "Котел газовый 26кВт",
       progress: 100,
+      type: "installation",
       documents: ["contract.pdf", "completion_act.pdf", "warranty.pdf"],
       photos: ["site_before_1.jpg", "installation_1.jpg", "completed_1.jpg", "completed_2.jpg"]
+    },
+    {
+      id: "INS-007",
+      address: "пр. Космонавтов, 15",
+      client: {
+        fullName: "Белова Татьяна Николаевна",
+        phone: "+7 (999) 888-88-88",
+        email: "belova@example.com",
+        passport: "8888 888888",
+        inn: "888888888888"
+      },
+      status: "canceled",
+      orderDate: "2024-09-12",
+      plannedDate: "2024-09-30",
+      boilerType: "Котел конденсационный 30кВт",
+      progress: 5,
+      type: "installation",
+      documents: ["quotation.pdf", "cancel_notice.pdf"],
+      photos: []
     }
   ];
+
+  // Фильтрация данных
+  const filteredData = allData.filter(item => {
+    const matchesSearch = searchQuery === '' || 
+      item.address.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.client.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.boilerType.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    const matchesStatus = statusFilter === 'all' || item.status === statusFilter;
+    const matchesType = typeFilter === 'all' || item.type === typeFilter;
+    
+    return matchesSearch && matchesStatus && matchesType;
+  });
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -120,32 +298,46 @@ export default function Index() {
     }
   };
 
-  const getInstallationStatusColor = (status: string) => {
+  const getStatusColor = (status: string) => {
     switch (status) {
+      case "active": return "bg-green-500";
+      case "warning": return "bg-yellow-500";
+      case "maintenance": return "bg-blue-500";
+      case "offline": return "bg-red-500";
+      case "quotation": return "bg-cyan-500";
       case "production": return "bg-orange-500";
-      case "delivery": return "bg-blue-500";
+      case "delivery": return "bg-indigo-500";
       case "installation": return "bg-purple-500";
-      case "testing": return "bg-yellow-500";
-      case "completed": return "bg-green-500";
-      default: return "bg-gray-500";
+      case "testing": return "bg-amber-500";
+      case "completed": return "bg-green-600";
+      case "canceled": return "bg-gray-500";
+      default: return "bg-gray-400";
     }
   };
 
-  const getInstallationStatusText = (status: string) => {
+  const getStatusText = (status: string) => {
     switch (status) {
+      case "active": return "Активен";
+      case "warning": return "Предупреждение";
+      case "maintenance": return "Обслуживание";
+      case "offline": return "Отключен";
+      case "quotation": return "Коммерческое предложение";
       case "production": return "Производство";
       case "delivery": return "Доставка";
       case "installation": return "Монтаж";
       case "testing": return "Тестирование";
       case "completed": return "Завершен";
+      case "canceled": return "Отменен";
       default: return "Неизвестно";
     }
   };
 
-  const activeBoilers = boilerData.filter(b => b.status === "active").length;
-  const maintenanceBoilers = boilerData.filter(b => b.status === "maintenance").length;
-  const warningBoilers = boilerData.filter(b => b.status === "warning").length;
-  const offlineBoilers = boilerData.filter(b => b.status === "offline").length;
+  const activeBoilers = allData.filter(b => b.status === "active").length;
+  const maintenanceBoilers = allData.filter(b => b.status === "maintenance").length;
+  const warningBoilers = allData.filter(b => b.status === "warning").length;
+  const offlineBoilers = allData.filter(b => b.status === "offline").length;
+  const completedInstallations = allData.filter(b => b.status === "completed").length;
+  const activeInstallations = allData.filter(b => b.type === "installation" && !['completed', 'canceled'].includes(b.status)).length;
 
   return (
     <div className="min-h-screen bg-background">
@@ -219,7 +411,7 @@ export default function Index() {
                   <Icon name="Flame" size={16} className="text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{boilerData.length}</div>
+                  <div className="text-2xl font-bold">{allData.length}</div>
                   <p className="text-xs text-muted-foreground">+2 с прошлого месяца</p>
                 </CardContent>
               </Card>
@@ -262,8 +454,7 @@ export default function Index() {
             <Tabs defaultValue="overview" className="space-y-4">
               <TabsList>
                 <TabsTrigger value="overview">Обзор</TabsTrigger>
-                <TabsTrigger value="boilers">Список котлов</TabsTrigger>
-                <TabsTrigger value="installations">Монтажи</TabsTrigger>
+                <TabsTrigger value="management">Управление котлами</TabsTrigger>
                 <TabsTrigger value="calendar">Календарь</TabsTrigger>
                 <TabsTrigger value="map">Карта</TabsTrigger>
               </TabsList>
@@ -345,61 +536,81 @@ export default function Index() {
                 </div>
               </TabsContent>
 
-              <TabsContent value="boilers" className="space-y-4">
+              <TabsContent value="management" className="space-y-4">
+                {/* Поиск и фильтры */}
                 <Card>
                   <CardHeader>
-                    <CardTitle>Управление котлами</CardTitle>
-                    <CardDescription>Мониторинг состояния и управление оборудованием</CardDescription>
+                    <CardTitle>Поиск и фильтры</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>ID</TableHead>
-                          <TableHead>Адрес установки</TableHead>
-                          <TableHead>Статус</TableHead>
-                          <TableHead>Температура</TableHead>
-                          <TableHead>Последнее ТО</TableHead>
-                          <TableHead>Действия</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {boilerData.map((boiler) => (
-                          <TableRow key={boiler.id}>
-                            <TableCell className="font-medium">{boiler.id}</TableCell>
-                            <TableCell>{boiler.address}</TableCell>
-                            <TableCell>
-                              <Badge variant="secondary" className={`${getStatusColor(boiler.status)} text-white`}>
-                                {getStatusText(boiler.status)}
-                              </Badge>
-                            </TableCell>
-                            <TableCell>{boiler.temp}°C</TableCell>
-                            <TableCell>{boiler.lastService}</TableCell>
-                            <TableCell>
-                              <div className="flex space-x-2">
-                                <Button variant="outline" size="sm">
-                                  <Icon name="Eye" size={14} className="mr-1" />
-                                  Детали
-                                </Button>
-                                <Button variant="outline" size="sm">
-                                  <Icon name="Settings" size={14} className="mr-1" />
-                                  Настройки
-                                </Button>
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                      <div className="flex items-center space-x-2">
+                        <Icon name="Search" size={16} className="text-muted-foreground" />
+                        <Input
+                          placeholder="Поиск по адресу, клиенту, ID..."
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                          className="flex-1"
+                        />
+                      </div>
+                      
+                      <Select value={statusFilter} onValueChange={setStatusFilter}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Фильтр по статусу" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Все статусы</SelectItem>
+                          <SelectItem value="active">Активные</SelectItem>
+                          <SelectItem value="warning">Предупреждения</SelectItem>
+                          <SelectItem value="maintenance">Обслуживание</SelectItem>
+                          <SelectItem value="offline">Отключены</SelectItem>
+                          <SelectItem value="quotation">Комм. предложение</SelectItem>
+                          <SelectItem value="production">Производство</SelectItem>
+                          <SelectItem value="delivery">Доставка</SelectItem>
+                          <SelectItem value="installation">Монтаж</SelectItem>
+                          <SelectItem value="testing">Тестирование</SelectItem>
+                          <SelectItem value="completed">Завершены</SelectItem>
+                          <SelectItem value="canceled">Отменены</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      
+                      <Select value={typeFilter} onValueChange={setTypeFilter}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Тип объекта" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Все объекты</SelectItem>
+                          <SelectItem value="existing">Установленные котлы</SelectItem>
+                          <SelectItem value="installation">Новые установки</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      
+                      <div className="flex space-x-2">
+                        <Button
+                          variant="outline"
+                          onClick={() => {
+                            setSearchQuery('');
+                            setStatusFilter('all');
+                            setTypeFilter('all');
+                          }}
+                        >
+                          <Icon name="X" size={16} className="mr-1" />
+                          Очистить
+                        </Button>
+                      </div>
+                    </div>
+                    
+                    <div className="mt-4 text-sm text-muted-foreground">
+                      Найдено: {filteredData.length} из {allData.length} объектов
+                    </div>
                   </CardContent>
                 </Card>
-              </TabsContent>
-
-              <TabsContent value="installations" className="space-y-4">
+                
+                {/* Основная таблица */}
                 <Card>
                   <CardHeader>
-                    <CardTitle>Управление монтажами</CardTitle>
-                    <CardDescription>Контроль этапов установки котлов и работа с клиентами</CardDescription>
+                    <CardTitle>Управление котлами и установками</CardTitle>
+                    <CardDescription>Полный контроль существующих котлов и новых установок</CardDescription>
                   </CardHeader>
                   <CardContent>
                     <Table>
@@ -408,39 +619,61 @@ export default function Index() {
                           <TableHead>ID</TableHead>
                           <TableHead>Адрес</TableHead>
                           <TableHead>Клиент</TableHead>
+                          <TableHead>Тип котла</TableHead>
                           <TableHead>Статус</TableHead>
                           <TableHead>Прогресс</TableHead>
-                          <TableHead>Дата план.</TableHead>
+                          <TableHead>Дата</TableHead>
                           <TableHead>Действия</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {installationData.map((installation) => (
-                          <TableRow key={installation.id}>
-                            <TableCell className="font-medium">{installation.id}</TableCell>
-                            <TableCell>{installation.address}</TableCell>
+                        {filteredData.map((item) => (
+                          <TableRow key={item.id}>
+                            <TableCell className="font-medium">{item.id}</TableCell>
+                            <TableCell>{item.address}</TableCell>
                             <TableCell>
                               <div className="flex items-center space-x-2">
                                 <Avatar className="h-8 w-8">
                                   <AvatarFallback>
-                                    {installation.client.fullName.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                                    {item.client.fullName.split(' ').map(n => n[0]).join('').slice(0, 2)}
                                   </AvatarFallback>
                                 </Avatar>
-                                <span className="text-sm">{installation.client.fullName}</span>
+                                <div>
+                                  <div className="text-sm font-medium">{item.client.fullName}</div>
+                                  <div className="text-xs text-muted-foreground">{item.client.phone}</div>
+                                </div>
                               </div>
                             </TableCell>
                             <TableCell>
-                              <Badge variant="secondary" className={`${getInstallationStatusColor(installation.status)} text-white`}>
-                                {getInstallationStatusText(installation.status)}
+                              <div className="text-sm">{item.boilerType}</div>
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant="secondary" className={`${getStatusColor(item.status)} text-white`}>
+                                {getStatusText(item.status)}
                               </Badge>
                             </TableCell>
                             <TableCell>
                               <div className="flex items-center space-x-2">
-                                <Progress value={installation.progress} className="w-16 h-2" />
-                                <span className="text-sm text-muted-foreground">{installation.progress}%</span>
+                                <Progress value={item.progress} className="w-16 h-2" />
+                                <span className="text-sm text-muted-foreground">{item.progress}%</span>
                               </div>
                             </TableCell>
-                            <TableCell>{installation.plannedDate}</TableCell>
+                            <TableCell>
+                              {item.type === 'existing' && item.lastService ? (
+                                <div>
+                                  <div className="text-xs text-muted-foreground">Посл. ТО:</div>
+                                  <div className="text-sm">{item.lastService}</div>
+                                  {item.temp !== undefined && (
+                                    <div className="text-xs text-muted-foreground">{item.temp}°C</div>
+                                  )}
+                                </div>
+                              ) : (
+                                <div>
+                                  <div className="text-xs text-muted-foreground">План:</div>
+                                  <div className="text-sm">{item.plannedDate}</div>
+                                </div>
+                              )}
+                            </TableCell>
                             <TableCell>
                               <div className="flex space-x-2">
                                 <Dialog>
@@ -448,7 +681,7 @@ export default function Index() {
                                     <Button 
                                       variant="outline" 
                                       size="sm"
-                                      onClick={() => setSelectedInstallation(installation)}
+                                      onClick={() => setSelectedInstallation(item)}
                                     >
                                       <Icon name="Eye" size={14} className="mr-1" />
                                       Детали
@@ -456,9 +689,9 @@ export default function Index() {
                                   </DialogTrigger>
                                   <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
                                     <DialogHeader>
-                                      <DialogTitle>Детали установки {installation.id}</DialogTitle>
+                                      <DialogTitle>Детали объекта {item.id}</DialogTitle>
                                       <DialogDescription>
-                                        Полная информация о клиенте, прогрессе установки и документах
+                                        Полная информация о клиенте, котле и документах
                                       </DialogDescription>
                                     </DialogHeader>
                                     
