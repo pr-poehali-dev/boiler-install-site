@@ -29,9 +29,75 @@ export default function Index() {
       client: {
         fullName: "Смирнов Олег Петрович",
         phone: "+7 (999) 111-11-11",
+        additionalPhone: "+7 (999) 111-22-33",
         email: "smirnov@example.com",
         passport: "1111 111111",
-        inn: "111111111111"
+        inn: "111111111111",
+        region: "Московская область",
+        city: "Подольск",
+        district: "Центральный",
+        street: "ул. Ленина",
+        house: "15",
+        agreement: true,
+        separateBoilerRoom: true,
+        houseBuiltBefore2018: false,
+        workCompletionStatus: "completed",
+        applicationComment: "Стандартная установка",
+        surveyorStatus: "completed",
+        surveyorComment: "Все готово для установки",
+        plannedSurveyDate: "2024-01-08",
+        applicationCreatedDate: "2024-01-05",
+        actualSurveyDate: "2024-01-10",
+        visitStatus: "completed",
+        cadastralNumber: "50:21:0030105:123",
+        ownersCount: 1,
+        actualHouseArea: 120,
+        heatedArea: 100,
+        houseCommissioningDate: "2020-05-15",
+        ownersReadiness: "ready",
+        ecoHeatingYear: 2024,
+        conversionType: "gas",
+        wallMaterial: "brick",
+        floors: 2,
+        boilerRoomLocation: "basement",
+        boilerRoomCeilingMaterial: "concrete",
+        boilerRoomFloorMaterial: "concrete",
+        boilerRoomWallMaterial: "brick",
+        boilerBrandModel: "Vaillant turboTEC plus VU 242/5-5",
+        nominalPower: 24,
+        supplyVentilation: true,
+        windowsInBoilerRoom: true,
+        doorsInBoilerRoom: true,
+        fireAlarmAndSensor: true,
+        power220Point: "available",
+        distanceTo220: 3,
+        outputCircuits: 2,
+        circulationPump: true,
+        coldWaterConnection: "available",
+        distanceToColdWater: 2,
+        coolantFillingMethod: "pressure",
+        chimneyType: "coaxial",
+        chimneyDiameter: 60,
+        chimneyElbows: 2,
+        chimneyLength: 5,
+        ceilingHeight: 2.5,
+        roomLength: 4,
+        roomWidth: 3,
+        roomArea: 12,
+        aitType: "individual",
+        fuelType: "natural_gas",
+        heatingSystem: "radiator",
+        yandexDiskLink: "https://disk.yandex.ru/...",
+        fillingDate: "2024-01-10",
+        glazing: "double",
+        insulation: true,
+        houseCeilingHeight: 2.7,
+        glazingArea: 25,
+        panoramicGlazing: false,
+        houseWallMaterial: "brick",
+        houseSupplyVentilation: false,
+        heatingSystemType: "closed",
+        pipeConnectionDiameter: 25
       },
       status: "active",
       temp: 72,
@@ -678,8 +744,8 @@ export default function Index() {
                                     </DialogHeader>
                                     
                                     {selectedInstallation && (
-                                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                                        {/* Информация о клиенте */}
+                                      <div className="grid grid-cols-1 gap-6">
+                                        {/* Основная информация о клиенте */}
                                         <Card>
                                           <CardHeader>
                                             <CardTitle className="text-lg">Информация о клиенте</CardTitle>
@@ -697,10 +763,14 @@ export default function Index() {
                                               </div>
                                             </div>
                                             
-                                            <div className="grid grid-cols-1 gap-3">
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                               <div>
-                                                <Label className="text-sm font-medium">Телефон</Label>
+                                                <Label className="text-sm font-medium">Основной телефон</Label>
                                                 <Input value={selectedInstallation.client.phone} readOnly />
+                                              </div>
+                                              <div>
+                                                <Label className="text-sm font-medium">Дополнительный телефон</Label>
+                                                <Input value={selectedInstallation.client.additionalPhone || '-'} readOnly />
                                               </div>
                                               <div>
                                                 <Label className="text-sm font-medium">Email</Label>
@@ -714,6 +784,297 @@ export default function Index() {
                                                 <Label className="text-sm font-medium">ИНН</Label>
                                                 <Input value={selectedInstallation.client.inn} readOnly />
                                               </div>
+                                              <div>
+                                                <Label className="text-sm font-medium">Согласие получено</Label>
+                                                <Input value={selectedInstallation.client.agreement ? 'Да' : 'Нет'} readOnly />
+                                              </div>
+                                            </div>
+                                          </CardContent>
+                                        </Card>
+
+                                        {/* Адресная информация */}
+                                        <Card>
+                                          <CardHeader>
+                                            <CardTitle className="text-lg">Адресная информация</CardTitle>
+                                          </CardHeader>
+                                          <CardContent>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                              <div>
+                                                <Label className="text-sm font-medium">Регион</Label>
+                                                <Input value={selectedInstallation.client.region || '-'} readOnly />
+                                              </div>
+                                              <div>
+                                                <Label className="text-sm font-medium">Населенный пункт</Label>
+                                                <Input value={selectedInstallation.client.city || '-'} readOnly />
+                                              </div>
+                                              <div>
+                                                <Label className="text-sm font-medium">Район</Label>
+                                                <Input value={selectedInstallation.client.district || '-'} readOnly />
+                                              </div>
+                                              <div>
+                                                <Label className="text-sm font-medium">Улица</Label>
+                                                <Input value={selectedInstallation.client.street || '-'} readOnly />
+                                              </div>
+                                              <div>
+                                                <Label className="text-sm font-medium">Дом</Label>
+                                                <Input value={selectedInstallation.client.house || '-'} readOnly />
+                                              </div>
+                                              <div>
+                                                <Label className="text-sm font-medium">Кадастровый номер</Label>
+                                                <Input value={selectedInstallation.client.cadastralNumber || '-'} readOnly />
+                                              </div>
+                                            </div>
+                                          </CardContent>
+                                        </Card>
+
+                                        {/* Техническая информация о доме */}
+                                        <Card>
+                                          <CardHeader>
+                                            <CardTitle className="text-lg">Характеристики дома</CardTitle>
+                                          </CardHeader>
+                                          <CardContent>
+                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                              <div>
+                                                <Label className="text-sm font-medium">Год постройки до 2018</Label>
+                                                <Input value={selectedInstallation.client.houseBuiltBefore2018 ? 'Да' : 'Нет'} readOnly />
+                                              </div>
+                                              <div>
+                                                <Label className="text-sm font-medium">Этажность</Label>
+                                                <Input value={selectedInstallation.client.floors || '-'} readOnly />
+                                              </div>
+                                              <div>
+                                                <Label className="text-sm font-medium">Материал стен</Label>
+                                                <Input value={selectedInstallation.client.houseWallMaterial || '-'} readOnly />
+                                              </div>
+                                              <div>
+                                                <Label className="text-sm font-medium">Фактическая площадь (м²)</Label>
+                                                <Input value={selectedInstallation.client.actualHouseArea || '-'} readOnly />
+                                              </div>
+                                              <div>
+                                                <Label className="text-sm font-medium">Обогреваемая площадь (м²)</Label>
+                                                <Input value={selectedInstallation.client.heatedArea || '-'} readOnly />
+                                              </div>
+                                              <div>
+                                                <Label className="text-sm font-medium">Высота потолков (м)</Label>
+                                                <Input value={selectedInstallation.client.houseCeilingHeight || '-'} readOnly />
+                                              </div>
+                                              <div>
+                                                <Label className="text-sm font-medium">Количество собственников</Label>
+                                                <Input value={selectedInstallation.client.ownersCount || '-'} readOnly />
+                                              </div>
+                                              <div>
+                                                <Label className="text-sm font-medium">Дата ввода в эксплуатацию</Label>
+                                                <Input value={selectedInstallation.client.houseCommissioningDate || '-'} readOnly />
+                                              </div>
+                                              <div>
+                                                <Label className="text-sm font-medium">Остекление</Label>
+                                                <Input value={selectedInstallation.client.glazing || '-'} readOnly />
+                                              </div>
+                                              <div>
+                                                <Label className="text-sm font-medium">Площадь остекления (м²)</Label>
+                                                <Input value={selectedInstallation.client.glazingArea || '-'} readOnly />
+                                              </div>
+                                              <div>
+                                                <Label className="text-sm font-medium">Витражное остекление</Label>
+                                                <Input value={selectedInstallation.client.panoramicGlazing ? 'Да' : 'Нет'} readOnly />
+                                              </div>
+                                              <div>
+                                                <Label className="text-sm font-medium">Наличие утеплителя</Label>
+                                                <Input value={selectedInstallation.client.insulation ? 'Да' : 'Нет'} readOnly />
+                                              </div>
+                                            </div>
+                                          </CardContent>
+                                        </Card>
+
+                                        {/* Котельная */}
+                                        <Card>
+                                          <CardHeader>
+                                            <CardTitle className="text-lg">Котельное помещение</CardTitle>
+                                          </CardHeader>
+                                          <CardContent>
+                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                              <div>
+                                                <Label className="text-sm font-medium">Отдельное котельное помещение</Label>
+                                                <Input value={selectedInstallation.client.separateBoilerRoom ? 'Да' : 'Нет'} readOnly />
+                                              </div>
+                                              <div>
+                                                <Label className="text-sm font-medium">Расположение котельной</Label>
+                                                <Input value={selectedInstallation.client.boilerRoomLocation || '-'} readOnly />
+                                              </div>
+                                              <div>
+                                                <Label className="text-sm font-medium">Длина помещения (м)</Label>
+                                                <Input value={selectedInstallation.client.roomLength || '-'} readOnly />
+                                              </div>
+                                              <div>
+                                                <Label className="text-sm font-medium">Ширина помещения (м)</Label>
+                                                <Input value={selectedInstallation.client.roomWidth || '-'} readOnly />
+                                              </div>
+                                              <div>
+                                                <Label className="text-sm font-medium">Площадь помещения (м²)</Label>
+                                                <Input value={selectedInstallation.client.roomArea || '-'} readOnly />
+                                              </div>
+                                              <div>
+                                                <Label className="text-sm font-medium">Высота потолка (м)</Label>
+                                                <Input value={selectedInstallation.client.ceilingHeight || '-'} readOnly />
+                                              </div>
+                                              <div>
+                                                <Label className="text-sm font-medium">Материал стен</Label>
+                                                <Input value={selectedInstallation.client.boilerRoomWallMaterial || '-'} readOnly />
+                                              </div>
+                                              <div>
+                                                <Label className="text-sm font-medium">Материал потолка</Label>
+                                                <Input value={selectedInstallation.client.boilerRoomCeilingMaterial || '-'} readOnly />
+                                              </div>
+                                              <div>
+                                                <Label className="text-sm font-medium">Материал пола</Label>
+                                                <Input value={selectedInstallation.client.boilerRoomFloorMaterial || '-'} readOnly />
+                                              </div>
+                                              <div>
+                                                <Label className="text-sm font-medium">Окна в котельной</Label>
+                                                <Input value={selectedInstallation.client.windowsInBoilerRoom ? 'Да' : 'Нет'} readOnly />
+                                              </div>
+                                              <div>
+                                                <Label className="text-sm font-medium">Двери в котельной</Label>
+                                                <Input value={selectedInstallation.client.doorsInBoilerRoom ? 'Да' : 'Нет'} readOnly />
+                                              </div>
+                                              <div>
+                                                <Label className="text-sm font-medium">Приточная вентиляция</Label>
+                                                <Input value={selectedInstallation.client.supplyVentilation ? 'Да' : 'Нет'} readOnly />
+                                              </div>
+                                              <div>
+                                                <Label className="text-sm font-medium">Пожарная сигнализация</Label>
+                                                <Input value={selectedInstallation.client.fireAlarmAndSensor ? 'Да' : 'Нет'} readOnly />
+                                              </div>
+                                            </div>
+                                          </CardContent>
+                                        </Card>
+
+                                        {/* Оборудование и подключения */}
+                                        <Card>
+                                          <CardHeader>
+                                            <CardTitle className="text-lg">Котел и подключения</CardTitle>
+                                          </CardHeader>
+                                          <CardContent>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                              <div>
+                                                <Label className="text-sm font-medium">Марка и модель котла</Label>
+                                                <Input value={selectedInstallation.client.boilerBrandModel || selectedInstallation.boilerType} readOnly />
+                                              </div>
+                                              <div>
+                                                <Label className="text-sm font-medium">Номинальная мощность (кВт)</Label>
+                                                <Input value={selectedInstallation.client.nominalPower || '-'} readOnly />
+                                              </div>
+                                              <div>
+                                                <Label className="text-sm font-medium">Точка подключения 220В</Label>
+                                                <Input value={selectedInstallation.client.power220Point || '-'} readOnly />
+                                              </div>
+                                              <div>
+                                                <Label className="text-sm font-medium">Расстояние до 220В (м)</Label>
+                                                <Input value={selectedInstallation.client.distanceTo220 || '-'} readOnly />
+                                              </div>
+                                              <div>
+                                                <Label className="text-sm font-medium">Контуров на выходе</Label>
+                                                <Input value={selectedInstallation.client.outputCircuits || '-'} readOnly />
+                                              </div>
+                                              <div>
+                                                <Label className="text-sm font-medium">Циркуляционный насос</Label>
+                                                <Input value={selectedInstallation.client.circulationPump ? 'Да' : 'Нет'} readOnly />
+                                              </div>
+                                              <div>
+                                                <Label className="text-sm font-medium">Подключение к ХВС</Label>
+                                                <Input value={selectedInstallation.client.coldWaterConnection || '-'} readOnly />
+                                              </div>
+                                              <div>
+                                                <Label className="text-sm font-medium">Расстояние до ХВС (м)</Label>
+                                                <Input value={selectedInstallation.client.distanceToColdWater || '-'} readOnly />
+                                              </div>
+                                              <div>
+                                                <Label className="text-sm font-medium">Диаметр подкл. трубопровода (мм)</Label>
+                                                <Input value={selectedInstallation.client.pipeConnectionDiameter || '-'} readOnly />
+                                              </div>
+                                              <div>
+                                                <Label className="text-sm font-medium">Метод закачки теплоносителя</Label>
+                                                <Input value={selectedInstallation.client.coolantFillingMethod || '-'} readOnly />
+                                              </div>
+                                            </div>
+                                          </CardContent>
+                                        </Card>
+
+                                        {/* Дымоход */}
+                                        <Card>
+                                          <CardHeader>
+                                            <CardTitle className="text-lg">Дымоход</CardTitle>
+                                          </CardHeader>
+                                          <CardContent>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                              <div>
+                                                <Label className="text-sm font-medium">Тип дымохода</Label>
+                                                <Input value={selectedInstallation.client.chimneyType || '-'} readOnly />
+                                              </div>
+                                              <div>
+                                                <Label className="text-sm font-medium">Диаметр на выходе (мм)</Label>
+                                                <Input value={selectedInstallation.client.chimneyDiameter || '-'} readOnly />
+                                              </div>
+                                              <div>
+                                                <Label className="text-sm font-medium">Количество колен</Label>
+                                                <Input value={selectedInstallation.client.chimneyElbows || '-'} readOnly />
+                                              </div>
+                                              <div>
+                                                <Label className="text-sm font-medium">Длина дымохода (м)</Label>
+                                                <Input value={selectedInstallation.client.chimneyLength || '-'} readOnly />
+                                              </div>
+                                            </div>
+                                          </CardContent>
+                                        </Card>
+
+                                        {/* Статусы и комментарии */}
+                                        <Card>
+                                          <CardHeader>
+                                            <CardTitle className="text-lg">Статусы работ</CardTitle>
+                                          </CardHeader>
+                                          <CardContent>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                              <div>
+                                                <Label className="text-sm font-medium">Статус обходчиков</Label>
+                                                <Input value={selectedInstallation.client.surveyorStatus || '-'} readOnly />
+                                              </div>
+                                              <div>
+                                                <Label className="text-sm font-medium">Статус визита</Label>
+                                                <Input value={selectedInstallation.client.visitStatus || '-'} readOnly />
+                                              </div>
+                                              <div>
+                                                <Label className="text-sm font-medium">Планируемая дата визита</Label>
+                                                <Input value={selectedInstallation.client.plannedSurveyDate || '-'} readOnly />
+                                              </div>
+                                              <div>
+                                                <Label className="text-sm font-medium">Фактическая дата визита</Label>
+                                                <Input value={selectedInstallation.client.actualSurveyDate || '-'} readOnly />
+                                              </div>
+                                              <div>
+                                                <Label className="text-sm font-medium">Дата создания заявки</Label>
+                                                <Input value={selectedInstallation.client.applicationCreatedDate || selectedInstallation.orderDate} readOnly />
+                                              </div>
+                                              <div>
+                                                <Label className="text-sm font-medium">Дата заполнения</Label>
+                                                <Input value={selectedInstallation.client.fillingDate || '-'} readOnly />
+                                              </div>
+                                            </div>
+                                            
+                                            <div className="mt-4 space-y-3">
+                                              <div>
+                                                <Label className="text-sm font-medium">Комментарий к заявке</Label>
+                                                <Textarea value={selectedInstallation.client.applicationComment || '-'} readOnly rows={2} />
+                                              </div>
+                                              <div>
+                                                <Label className="text-sm font-medium">Комментарий обходчиков</Label>
+                                                <Textarea value={selectedInstallation.client.surveyorComment || '-'} readOnly rows={2} />
+                                              </div>
+                                              {selectedInstallation.client.yandexDiskLink && (
+                                                <div>
+                                                  <Label className="text-sm font-medium">Ссылка на Яндекс диск</Label>
+                                                  <Input value={selectedInstallation.client.yandexDiskLink} readOnly />
+                                                </div>
+                                              )}
                                             </div>
                                           </CardContent>
                                         </Card>
@@ -724,7 +1085,7 @@ export default function Index() {
                                             <CardTitle className="text-lg">Детали заказа</CardTitle>
                                           </CardHeader>
                                           <CardContent className="space-y-4">
-                                            <div className="space-y-3">
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                               <div>
                                                 <Label className="text-sm font-medium">Тип котла</Label>
                                                 <Input value={selectedInstallation.boilerType} readOnly />
@@ -738,15 +1099,48 @@ export default function Index() {
                                                 <Input value={selectedInstallation.plannedDate} readOnly />
                                               </div>
                                               <div>
-                                                <Label className="text-sm font-medium">Статус</Label>
+                                                <Label className="text-sm font-medium">Статус заявки</Label>
                                                 <Badge className={`${getStatusColor(selectedInstallation.status)} text-white`}>
                                                   {getStatusText(selectedInstallation.status)}
                                                 </Badge>
                                               </div>
                                               <div>
-                                                <Label className="text-sm font-medium">Прогресс: {selectedInstallation.progress}%</Label>
-                                                <Progress value={selectedInstallation.progress} className="mt-2" />
+                                                <Label className="text-sm font-medium">Завершение работы КЦ</Label>
+                                                <Input value={selectedInstallation.client.workCompletionStatus || '-'} readOnly />
                                               </div>
+                                              <div>
+                                                <Label className="text-sm font-medium">Готовность к переводу</Label>
+                                                <Input value={selectedInstallation.client.ownersReadiness || '-'} readOnly />
+                                              </div>
+                                              <div>
+                                                <Label className="text-sm font-medium">Год перевода на эко-отопление</Label>
+                                                <Input value={selectedInstallation.client.ecoHeatingYear || '-'} readOnly />
+                                              </div>
+                                              <div>
+                                                <Label className="text-sm font-medium">Вид перевода</Label>
+                                                <Input value={selectedInstallation.client.conversionType || '-'} readOnly />
+                                              </div>
+                                              <div>
+                                                <Label className="text-sm font-medium">Вид АИТ</Label>
+                                                <Input value={selectedInstallation.client.aitType || '-'} readOnly />
+                                              </div>
+                                              <div>
+                                                <Label className="text-sm font-medium">Вид топлива</Label>
+                                                <Input value={selectedInstallation.client.fuelType || '-'} readOnly />
+                                              </div>
+                                              <div>
+                                                <Label className="text-sm font-medium">Система отопления</Label>
+                                                <Input value={selectedInstallation.client.heatingSystem || '-'} readOnly />
+                                              </div>
+                                              <div>
+                                                <Label className="text-sm font-medium">Тип системы отопления</Label>
+                                                <Input value={selectedInstallation.client.heatingSystemType || '-'} readOnly />
+                                              </div>
+                                            </div>
+                                            
+                                            <div className="mt-4">
+                                              <Label className="text-sm font-medium">Прогресс: {selectedInstallation.progress}%</Label>
+                                              <Progress value={selectedInstallation.progress} className="mt-2" />
                                             </div>
                                           </CardContent>
                                         </Card>
